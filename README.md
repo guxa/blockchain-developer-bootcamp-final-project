@@ -13,7 +13,7 @@ Connecting people to activities of interest which they and their friends can aff
 
 5. If more than 2 users accept the proposal, the funds will be sent to another smart contract (the "let's go" contarct) from where they can only be used to pay for specific services (this part may not be viable to implement at this moment so won't be part of project exercs)
 
-6. If the GTC contract funds are not used in 12 months since their deployment, they will be "burned" or sent to a smart contract which can provide funds to cover the fees of other people who can not afford to do a certain activity.
+6. If the GTC contract funds are not used in 6 months since their deployment, they will be "burned" or sent to a smart contract which can provide funds to cover the fees of other people who can not afford to do a certain activity.
 
 
 ## Improvements 
