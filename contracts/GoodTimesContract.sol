@@ -13,9 +13,9 @@ contract GoodTimesContract is Ownable {
         uint256 budget;
         //State state;
         //   mapping (address => bool)  attendees; // ako e mapping ne mojme da gi vratime site vrednosti, dali ke imat potreba da e arraY?
-        mapping(address => uint256) fundsPledged;
+        
         uint256 confirmations;
-        bool confirmed;
+        bool closed;
 		uint256 createdAt;
     }
 
@@ -26,11 +26,11 @@ contract GoodTimesContract is Ownable {
 
     mapping(uint256 => GoodTime) public goodTimesRegistry; // GoodTime[] goodTimesRegistry;
 	// id of GTC, then user address 
-	mapping(uint256 => mapping(address => uint256)) private fundsPledgedByUser;
+	mapping(uint256 => mapping(address => uint256)) internal fundsPledgedByUser;
     
     mapping(address => uint256[]) goodTimesByUser;
-    /// Users that pledged Can be from 0 - 100.
-    uint8 public confirmationsAsPercentageOfBudget;
+    /// Users that pledged Can be from 0 - 100. Confirmation threshold as percentage of budget
+    uint8 public withdrawThreshold;
 
     modifier gtcExists(uint256 _id) {
         // require(_id < goodTimesRegistry.length, "GTC does not exist");
@@ -40,7 +40,7 @@ contract GoodTimesContract is Ownable {
 
     modifier onlyParticipants(uint256 _id) {
         require(
-            goodTimesRegistry[_id].fundsPledged[msg.sender] != 0,
+            fundsPledgedByUser[_id][msg.sender] != 0,
             "You are not participating in the specified good times!"
         );
         _;
@@ -48,8 +48,8 @@ contract GoodTimesContract is Ownable {
 
     modifier gtcIsOpened(uint256 _id) {
         require(
-            goodTimesRegistry[_id].fundsPledged[msg.sender] != 0,
-            "You are not participating in the specified good times!"
+            goodTimesRegistry[_id].closed == false,
+            "This GTC has been closed, funds've been transfered!"
         );
         _;
     }
@@ -60,13 +60,16 @@ contract GoodTimesContract is Ownable {
     event ConfirmationAdded(address indexed caller, uint256 indexed gtcId);
 	event RevokeConfirmation(address caller, uint256 indexed gtcId);
 
-    constructor() public Ownable() {
-        goodTimesCounter = 0;
+    constructor(uint8 threshold) Ownable() {
+        require(threshold > 0 && threshold < 100, "Threshold must be between 0 and 100");
+		withdrawThreshold = threshold;
+		goodTimesCounter = 0;
         //    GoodTime memory initial = GoodTime();
         GoodTime storage initial = goodTimesRegistry[0];
         initial.id = 0;
         initial.name = "";
         initial.budget = 0;
+		initial.closed = true;
         // goodTimesRegistry.push();
         goodTimesCounter++;
     }
@@ -74,7 +77,7 @@ contract GoodTimesContract is Ownable {
     function pledgeFunds(uint256 id) public payable gtcExists(id) {
         GoodTime storage target = goodTimesRegistry[id];
         target.budget += msg.value;
-        target.fundsPledged[msg.sender] += msg.value;
+        fundsPledgedByUser[id][msg.sender] += msg.value;
         //   uint[] storage usersGTCs = goodTimesByUser[msg.sender];
         //   usersGTCs.push(id);
         goodTimesByUser[msg.sender].push(id);
@@ -91,9 +94,10 @@ contract GoodTimesContract is Ownable {
         newGoodTime.id = goodTimesCounter;
         newGoodTime.name = name;
         newGoodTime.budget = 0 + msg.value;
-        newGoodTime.fundsPledged[msg.sender] += msg.value;
         newGoodTime.durationInDays = duration;
 		newGoodTime.createdAt = block.timestamp;
+		
+		fundsPledgedByUser[newGoodTime.id][msg.sender] += msg.value;
         goodTimesByUser[msg.sender].push(newGoodTime.id);
 
         _id = goodTimesCounter;
@@ -105,19 +109,20 @@ contract GoodTimesContract is Ownable {
         view
         returns (uint256 result)
     {
-        result = goodTimesRegistry[_id].fundsPledged[msg.sender];
+        result = fundsPledgedByUser[_id][msg.sender];
     }
 
     function checkIfUserIsEnrolled(uint256 _id) public view returns (bool) {
-        return goodTimesRegistry[_id].fundsPledged[msg.sender] != 0;
+        return fundsPledgedByUser[_id][msg.sender] != 0;
     }
 
     function sendFundsToBookingContract(uint256 id)
         public
         onlyParticipants(id)
+		gtcIsOpened(id)
     {
         GoodTime storage gtc = goodTimesRegistry[id];
-        if (gtc.confirmations < (gtc.budget * confirmationsAsPercentageOfBudget) / 100) 
+        if (gtc.confirmations < (gtc.budget * withdrawThreshold) / 100) 
 		{
             //string err = string(abi.encodePacked("Not enough confirmations to send transaction! Required", b))
             string
@@ -125,28 +130,33 @@ contract GoodTimesContract is Ownable {
             emit FailedWithdrawal(
                 msg.sender,
                 errorMessage,
-                (gtc.budget * confirmationsAsPercentageOfBudget) / 100
+                (gtc.budget * withdrawThreshold) / 100
             );
             revert(errorMessage);
         }
-        gtc.confirmed = true;
+        gtc.closed = true;
 
         // (bool success, ) = _letsGoAddress.call{value: gtc.budget}(abi.encodeWithSignature("receiveFundsFromGtc(uint256)", gtc.id));
         LetsGo destination = LetsGo(_letsGoAddress);
-        destination.receiveFundsFromGtc(id);
+        destination.receiveFundsFromGtc{value: gtc.budget}(id);
         //   require(success, "Failed to send funds to LetsGo contract");
         emit WithdrawalSuccess(id, msg.sender);
     }
 
-    function confirmWithdrawal(uint256 goodTimesId)
+    function confirmWithdrawal(uint256 id)
         public
-        onlyParticipants(goodTimesId)
+        onlyParticipants(id)
+		gtcIsOpened(id)
     {
-        emit ConfirmationAdded(msg.sender, goodTimesId);
+		GoodTime storage gtc = goodTimesRegistry[id];
+		gtc.confirmations += fundsPledgedByUser[id][msg.sender];
+        emit ConfirmationAdded(msg.sender, id);
     }
 
-	function revokeConfirmation(uint id) public onlyParticipants(id)
+	function revokeConfirmation(uint id) public onlyParticipants(id) gtcIsOpened(id)
 	{
+		GoodTime storage gtc = goodTimesRegistry[id];
+		gtc.confirmations -= fundsPledgedByUser[id][msg.sender];
 		emit RevokeConfirmation(msg.sender, id);
 	}
 

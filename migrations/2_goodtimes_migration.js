@@ -1,5 +1,6 @@
 const GoodTimes = artifacts.require("GoodTimesContract");
 
 module.exports = function (deployer) {
-  deployer.deploy(GoodTimes);
+	const withdrawalThreshold = 50;
+  deployer.deploy(GoodTimes, withdrawalThreshold);
 };
