@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="styles.css">
+	<title>My simple DAPP</title>	
+</head>
+<body>
+	<h1>Welcome to the Good Times Dapp </h1>
+	<div id="conn-status"> </div>
+
+	<br>
+	<div id="mm-detected">Please connect your metamask to continue </div>
+
+	<button id="mm-connect">Connect to MetaMask</button>
+	<br><br>
+	<div id="mm-current-account"></div>
+
+	<input type="number" id="gtc-id-input" placeholder="GoodTimes id">
+
+	<br><br>
+	
+	<button id="check-enrolled">Check if enrolled</button>
+	<div id ="enrolled-result"></div>
+	<br><br><br>
+
+	<!-- <button id="ss-getValue">Read SimpleStorage state</button> -->
+
+	<div class="wrapper">
+		<div class="title">
+			Create Good Times &#x1F643;
+		</div>
+		<div class="form">
+			<div class="inputfield">
+				<label>Good Times title</label>
+				<input type="text" id="input-name" class="input">
+			</div>
+			<div class="inputfield">
+				<label>Duration</label>
+				<input type="number" id="input-duration" class="input" placeholder="How many days you expect the experience to last">
+			</div>
+			 <div class="inputfield">
+				<label>Value in ETH</label>
+				<input type="number" id="input-eth" class="input" placeholder="How many days you expect the experience to last">
+			</div>
+			<div class="inputfield">
+				<input type="submit"  id="create-gtc" class="btn" value="Create good times">
+			</div>
+		</div>
+		  <!-- <button id="create-gtc" class="btn">Create good times</button> -->
+		  
+	</div>
+	<p id="create-gtc-result"></p>
+	<!-- <table class="gtcFromUser">
+		<thead>
+			<tr><th>GTC id</th><th>Title</th>
+		</thead>
+		<tbody>
+		
+		</tbody>
+	</table> -->
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script src="dapp.js"></script>
+
+</html>
