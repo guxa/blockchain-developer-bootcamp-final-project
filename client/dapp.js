@@ -1,11 +1,9 @@
-const goodTimesAddress = "0x57A185a1c7304faC0D7e816D4B9f0D639F21dE83";
+const goodTimesAddress = "0xCB7E4a689C0430174BD81cA0bb62b8700e96FC8b";
 const GTC_ABI_PATH = "../build/contracts/GoodTimesContract.json";
 let goodTimesContract;
 let proba;
 var web3;
 // const Web3 = require("web3")
-
-console.log("Hello dapp developers !")
 
 window.addEventListener('load', onPageLoad);
 
@@ -15,7 +13,7 @@ async function onPageLoad()
 	{
 		console.log("Metamask detected!");
 		let mmDetected = document.getElementById('mm-detected');
-		mmDetected.innerHTML = "MetaMask has been detected !"
+		mmDetected.innerHTML = "MetaMask detected, nice ;)"
 
 		await loadAbi(); //await
 		window.addEventListener('click', checkConnection);
@@ -51,6 +49,8 @@ mmEnable.onclick = async () => {
 	
 }
 
+
+/* Calling SmartContract Functions */
 async function createGoodTimes() {
 	const name = document.getElementById("input-name").value;
 	const duration = document.getElementById("input-duration").value;
@@ -62,50 +62,127 @@ async function createGoodTimes() {
 	resultElement.textContent += ("Wohoo, created Good times! Id: " + tx.events.GtcCreated.returnValues.gtcId);
 }
 
+async function getGoodTimeObj(id) {
+	let gtc = await goodTimesContract.methods.goodTimesRegistry(1).call({ from: ethereum.selectedAddress});
+	console.log(gtc.name);
+	return gtc;
+}
+
 async function callCheckEnrolled() {
 	const gtcId = document.getElementById("gtc-id-input").value;
 	console.log(gtcId);
-	// var web3 = new Web3(window.ethereum);
-	try {
-		proba = await goodTimesContract.methods.checkIfUserIsEnrolled(gtcId).call({ from: ethereum.selectedAddress});
-	} catch (error) {
-		console.log(error);
-	}
+
+	proba = await goodTimesContract.methods.checkIfUserIsEnrolled(gtcId).call({ from: ethereum.selectedAddress});
+
 	// await goodTimesContract.methods.checkIfUserIsEnrolled(gtcId).call({ from: ethereum.selectedAddress})
-	// 	.then(res => proba = res).catch( err => console.log(err));
+	// 	.then(res => proba = res).catch(console.log);
 
 	//await probata().
 	var para = document.createElement("P");	
 	var t = document.createTextNode(`${proba}`);
 	para.style.fontWeight = "bold";
+	para.style.margin = "5px";
 	para.appendChild(t);
 	document.getElementById("enrolled-result").appendChild(para);
 }
 
  function callGetUsersGtc(){
-	let arr;
 	goodTimesContract.methods.getUsersGTCs()
 		.call({from: ethereum.selectedAddress})
 		.then(
 			data => {
-				arr = data;
-				let table = document.createElement("table");
-				let innerHt = "";
-				innerHt += "<tr class='firstRow'><th>Gtc Id</th><th>Title</th></tr>";
-				for (let i = 0; i < arr.length; i++) {
-					const gtcId = arr[i];
-					innerHt += `<tr><td>${gtcId}</td> <td>Name </td> </tr>`
-				}
-				table.innerHTML = innerHt;
-				document.body.append(table);
+				createTableFromArray(data);
 			}
 		);
 
+}
+/*	*** */
+function fillTableRowWithGtcResult(gtcObject) {
+	let table = document.getElementById("usersGtc");
+	let row = table.rows.namedItem("gtc" + gtcObject.id);
+
+	row.cells[1].innerHTML = gtcObject.name;
+
+	// Create new headers
+	if (table.rows[0].cells.length <= 3)
+	{
+		let newColumn = document.createElement("th");
+		newColumn.innerHTML = "Budget";
+		table.tHead.appendChild(newColumn);
+		
+		newColumn = document.createElement("th");
+		newColumn.innerHTML = "Duration";
+		table.tHead.appendChild(newColumn);
+	
+		newColumn = document.createElement("th");
+		newColumn.innerHTML = "Confirmations";
+		table.tHead.appendChild(newColumn);
+	}
+
+	let td = document.createElement("td")
+	td.innerHTML = web3.utils.fromWei(gtcObject.budget, "ether") + " ETH";
+	row.appendChild(td);
+
+	td = document.createElement("td")
+	td.innerHTML = gtcObject.durationInDays; + "days";
+	row.appendChild(td);
+
+	td = document.createElement("td")
+	td.innerHTML = web3.utils.fromWei(gtcObject.confirmations, "ether") + " ETH";
+	row.appendChild(td);
+}
+
+async function createTableFromArray(arr) {
+	let table = document.createElement("table"),
+		thead = document.createElement("thead"),
+		tbody = document.createElement('tbody'),
+		th = document.createElement("th");
+	
+	table.id = "usersGtc"; //table.onclick = highlight;
+	th.innerHTML = "Gtc Id"; 	
+	thead.appendChild(th);
+
+	th = document.createElement("th");
+	th.innerHTML = "Name";
+	thead.appendChild(th);
+
+	th = document.createElement("th");
+	th.innerHTML = "Action";
+	thead.appendChild(th);
+
+	table.appendChild(thead);
+	table.appendChild(tbody);
+	// table.style.background = "#fff";
+	for (let i = 0; i < arr.length; i++) {
+		const gtcId = arr[i];
+		let tr = document.createElement("tr");
+		let td = document.createElement("td");
+		td.innerHTML = gtcId;
+		tr.appendChild(td);
+		tr.id = "gtc" + gtcId;
+		tr.appendChild(document.createElement("td")); // placeholder for Name column
+
+		let btnElement = document.createElement("button");
+		btnElement.type = "button";
+		btnElement.innerHTML = "get Gtc Details";
+		btnElement.onclick = async function() { 
+			// var id = await getGoodTimeObj(gtcId);
+			fillTableRowWithGtcResult(await getGoodTimeObj(gtcId)) 
+		};
+		td = document.createElement("td");
+		td.appendChild(btnElement);
+		tr.appendChild(td);
+
+		tbody.appendChild(tr);
+	}
+	document.body.append(table);
 }
 
 async function probata() {
 	throw 'myException';
 }
+
+document.getElementById("get-mygtcs").onclick = callGetUsersGtc;
 
 const checkEnrolled = document.getElementById('check-enrolled');
 checkEnrolled.onclick = callCheckEnrolled;
