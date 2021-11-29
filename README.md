@@ -9,50 +9,54 @@ It uses a multi-signature wallet concept, with some modifications like the confi
 
 1. User creates a new Good Times by entering a title, duration in days, and ETH they want to pledge as initial budget for the good time.
 
-2. Besides creating, the user can also "join" a good time by pledging funds to a GoodTime if he knows the id of the good time his friends created. The user needs to enter the id of the GoodTime, and the amount of ETH he wants to pledge, then click the [Pledge funds for GoodTime] button
+2. Besides creating, the user can also "join" a good time by pledging funds to a GoodTime if he knows the id of the GoodTime his friends created. The user needs to enter the id of the GoodTime, and the amount of ETH he wants to pledge, then click the **[Pledge funds for GoodTime]** button which will send a Tx and add the user as a participant to the GoodTime.
 
-3. The user can see the good times he is participating in, by clicking the <Get GoodTimes you participate in> button
-3.1 From the list of good times, the user can get more details about the GoodTime, by clicking <Get info>. This will show the Budget(total funds pledged to GoodTime), Duration, Confirmations, and status.
+3. The user can see the good times he is participating in, by clicking the **[Get GoodTimes you participate in]** button
+3.1 From the list of good times, the user can get more details about the GoodTime, by clicking **[Get info]**. This will show the Budget(total funds pledged to GoodTime), Duration, Confirmations, and status.
 
-4. The user can confirm withdrawal by clicking <Confirm withdrawal> button, this increases the confirmation amount of the GoodTimes by the value that User has pledged to that specific GoodTime. The confirmations are crucial to send funds to the Booking contract (LetsGo contract). The % of confirmations as part of the budget depends on the value in withdrawThreshold variable.
+4. The user can confirm withdrawal by clicking **[Confirm withdrawal]** button, this increases the confirmation amount of the GoodTimes by the value that User has pledged to that specific GoodTime. The confirmations are crucial to send funds to the Booking contract (LetsGo contract). The % of confirmations as part of the budget depends on the value in withdrawThreshold variable.
 
 5. Send funds to booking contract - this sends the GoodTime budget, to the booking contract. For this to be succesfull, the confirmation amount of the GoodTimes must be at least 50% of the budget . NOTE: the booking contract (LetsGo.sol) is not yet implemented, to finish it we will need some sort of Oracle that can communicate with sites like (Booking.com, Expedia, Ticketmaster) and make reservations/buy tickets for events.
 
 ## Folder structure
 - `client`: Front end application files (Vanilla JS, HTML, CSS)
 - `contracts`: Solidity smart contracts
+- `migrations`: migration scripts for deploying the smart contracts
 - `test`: JS tests for the solidity smart contract GoodTimesContract.sol
 
 ## Prerequisites
 ### If using the hosted app:
 1. MetaMask extension for browser
+2. Some ETH for transactions ^^
 
 ### For running locally
 1. NodeJS v8.9.4 or later and npm v5.0.3 or later
 2. Install truffle `npm install -g truffle` 
 3. Git clone this repository in new folder
-4. Open terminal, navigate to the folder where you cloned the repo
+4. Open a terminal, navigate to the folder where you cloned the repo
 5. run `npm install`
 6. Open another terminal, start a local blockchain instance using Ganache `ganache-cli -p 8545` leave this terminal open
 7. Compile and deploy the smartcontracts: In the first terminal, go to the root of the repo and run `truffle migrate --network development`
-8. Open client/index.html from your Browser (make sure you have MetaMask installed)
+8. Open `client/index.html` in your Browser (make sure you have MetaMask installed)
 9. Have a good time (:)
 
-
-
-
 ## Test
+- Make sure you have truffle installed (see steps 1 and 2 above)
 - Navigate to the folder where you cloned the repository
 - run `truffle test`
+
+
 ## Future developments
-(*Most of these actions will be done of chain in a web app)
-1.  At registration the user can pldegde a certain amount of funds in a smart contract "Good times contract" or GTC. When making a deposit, the user can also provide an arbitrary username, which will be noted in the system. That "username" and the address that they use to deposit these funds will be used to "connect" them to their circle of humans. Later if they deposit funds to the same GTC contract from other address that one also will be included in the system and appended with the initial username.
 
-2. Users can also provide the eth addresses of people in their circle who they wish to travel with. This will act as some kind of a contact list.
+1. Implement the LetsGo contract, create Oracle that can automate the use of the pledge funds where possible. For example by making calls to booking, expedia, ticketmaster APIs and making a reservation, or buying tickets etc.
 
-3. Depending on the settings, once in a specific period of time, or On demand the system will propse activities which include people who have pledged funds in the GoodTimes that were transfered to LetsGo. The matching will also take in consideration the pledged funds, when generating the proposals. The user can then accept or deny the proposal. If the user denies a new proposal will be generated after a specified time.
+2. When making a deposit, the user can also provide an arbitrary username. That "username" and the address that they use to deposit these funds will be used to "connect" them to their circle of humans. Later if they deposit funds to the same GTC contract from other address that one also will be included in the system and appended with the initial username.
 
-4. If the GTC contract funds are not used in 6 months since their deployment, they will be "burned" or sent to a smart contract which can provide funds to cover the fees of other people who can not afford to do a certain activity.
+3. Users can also provide the eth addresses of people in their circle who they wish to travel with. This will act as some kind of a contact list.
+
+4. Depending on the settings, once in a specific period of time, or On demand the system will propse activities which include people who have pledged funds in the GoodTimes that were transfered to LetsGo. The matching will also take in consideration the pledged funds, when generating the proposals. The user can then accept or deny the proposal. If the user denies a new proposal will be generated after a specified time.
+
+5. If the GTC contract funds are not used in 6 months since their deployment, they will be "burned" or sent to a smart contract which can provide funds to cover the fees of other people who can not afford to do a certain activity.
 
 
 ### Even further developments
@@ -60,8 +64,6 @@ Users will register with regular account by providing a list of activities the p
 
 Users  will receive notifications with proposed activities, based on their interests, distance willing to travel or region willing to travel to, and friends.
 They will pledge their funds to a certain activity in the future.
-
-**Good additional features to be added would be to automate the use of the pledge funds where possible. For example by making calls to booking, expedia, ticketmaster APIs and making a reservation, or buying tickets etc.
 
 
 # Public ETH address for certification
