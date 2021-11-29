@@ -12,68 +12,74 @@
 	<h1>Welcome to the Good Times Dapp </h1>
 	<div class="row">
 	
-	<div class="wrapper column">
-		<div id="conn-status" class="jane"> </div>
-		<div id="mm-detected" class="jane">Please connect your metamask to continue </div>
+		<div class="wrapper column">
+			<div id="conn-status"> </div>
+			<div id="mm-detected" class="inform">Please connect your metamask to continue </div>
 	
-		<button id="mm-connect">Connect to MetaMask</button>
-		
-		<div id="mm-current-account"></div>
-		<br>
-		<input type="number"class="inputfield" id="gtc-id-input" placeholder="GoodTimes id">
-		<!-- <br> -->
+			<!-- <button id="mm-connect">Check MetaMask</button> -->
 	
-		<button id="check-enrolled" class="jane">Check if enrolled</button>
-		<div id="enrolled-result"></div>
-		<input type="submit"  id="get-mygtcs" class="btn" value="Get GoodTimes you participate in">
-		
+			<div id="mm-current-account"></div>
+	
+			<!-- <input type="number"class="inputfield" id="gtc-id-input" placeholder="GoodTimes id"> -->
+	
+			<!-- <button id="check-enrolled" class="inform">Check if enrolled</button> -->
+			<!-- <div id="enrolled-result"></div> -->
+			<div class="form">
+			<input type="submit" id="get-mygtcs" class="btn" value="Get GoodTimes you participate in">
+			<br><br>
+			<div class="inputfield">
+				<label>GTC id</label>
+				<input type="number" id="pledge-id" class="input"
+					placeholder="Eth you want to pledge to this GTC experience">
+			</div>
+			<div class="inputfield">
+				<label>ETH</label>
+				<input type="number" id="pledge-eth" class="input"
+					placeholder="Value in ETH">
+			</div>
+			<input type="submit" id="pledge-btn" class="btn" value="Pledge funds for GoodTime">
+		</div>
+			<!-- <input class="inform" id="pledge-id" placeholder="GoodTimes id">
+			<input class="inform" id="pledge-eth" placeholder="Value in ETH">
+			<button id="pledge-btn" class="inform">Pledge funds to GTC</button> -->
+	
+		</div>
+	
+		<div class="wrapper column">
+			<div class="title">
+				Create Good Times &#x1F643;
+			</div>
+			<div class="form">
+				<div class="inputfield">
+					<label>Good Times title</label>
+					<input type="text" id="input-name" class="input">
+				</div>
+				<div class="inputfield">
+					<label>Duration</label>
+					<input type="number" id="input-duration" class="input"
+						placeholder="Days you expect the experience to last">
+				</div>
+				<div class="inputfield">
+					<label>Value in ETH</label>
+					<input type="number" id="input-eth" class="input"
+						placeholder="Eth you want to pledge to this GTC experience">
+				</div>
+				<div class="inputfield">
+					<input type="submit" id="create-gtc" class="btn" value="Create good times">
+				</div>
+			</div>
+			<p id="create-gtc-result"></p>
+		</div>
 	</div>
 
-	<!-- <button id="ss-getValue">Read SimpleStorage state</button> -->
-
-	<div class="wrapper column">
-		<div class="title">
-			Create Good Times &#x1F643;
+	<div class="row">
+		<div class="column">
+			<p id="confirm-result"></p>
 		</div>
-		<div class="form">
-			<div class="inputfield">
-				<label>Good Times title</label>
-				<input type="text" id="input-name" class="input">
-			</div>
-			<div class="inputfield">
-				<label>Duration</label>
-				<input type="number" id="input-duration" class="input" placeholder="How many days you expect the experience to last">
-			</div>
-			 <div class="inputfield">
-				<label>Value in ETH</label>
-				<input type="number" id="input-eth" class="input" placeholder="Eth you want to pledge to this GTC experience">
-			</div>
-			<div class="inputfield">
-				<input type="submit"  id="create-gtc" class="btn" value="Create good times">
-			</div>
-		</div>
-		<p id="create-gtc-result"></p>
-		  <!-- <button id="create-gtc" class="btn">Create good times</button> -->
-		  
+	
+		<div class="column"></div>
 	</div>
-</div>
-	<!-- <table class="gtcFromUser">
-		<thead>
-			<th>GTC id</th> 
-			<th>Title</th>
-		</thead>
-		<tbody>
-			<tr><td></td>
-		<td> <button id="check-enrolled" class="jane">Check if enrolled</button> </td>
-	</tr>
-	<tr>
-		<td></td> <td></td>
-	</tr>
-	<tr>
-		<td></td><td></td>
-	</tr>
-		</tbody>
-	</table> -->
+
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>

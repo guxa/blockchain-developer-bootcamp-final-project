@@ -1,9 +1,7 @@
-const goodTimesAddress = "0xCB7E4a689C0430174BD81cA0bb62b8700e96FC8b";
+const goodTimesAddress = "0x932824dBD7E5A3D94CC92b0f69E008338c18d198";
 const GTC_ABI_PATH = "../build/contracts/GoodTimesContract.json";
 let goodTimesContract;
-let proba;
 var web3;
-// const Web3 = require("web3")
 
 window.addEventListener('load', onPageLoad);
 
@@ -13,10 +11,12 @@ async function onPageLoad()
 	{
 		console.log("Metamask detected!");
 		let mmDetected = document.getElementById('mm-detected');
-		mmDetected.innerHTML = "MetaMask detected, nice ;)"
+		await ethereum.request({method: 'eth_requestAccounts'});
+		mmDetected.innerHTML = "MetaMask detected, nice &#x1F98A;" +
+			`<br> Your account: ${ethereum.selectedAddress}`;
 
-		await loadAbi(); //await
-		window.addEventListener('click', checkConnection);
+		await configureBlockchainStuff();
+		
 		await checkConnection();
 	}
 	else
@@ -27,27 +27,49 @@ async function onPageLoad()
 }
 
 
-async function loadAbi(){
+async function configureBlockchainStuff(){
 	let currentContractAddress = goodTimesAddress;
 	var json = await $.getJSON(GTC_ABI_PATH);
-		//.then((data) => console.log(data), (err) => console.log(err));
 	let abi = json.abi; 
 	web3 = new Web3(window.ethereum);
 	goodTimesContract = new web3.eth.Contract(abi, currentContractAddress);
-	goodTimesContract.setProvider(window.ethereum);
+	await goodTimesContract.setProvider(window.ethereum);
+	window.addEventListener('click', checkConnection);
 }
 
+/* Web3 Utility Functions */
 
-const mmEnable = document.getElementById('mm-connect');
-
-mmEnable.onclick = async () => {
-	console.log("someone clicked the button");
-	await ethereum.request({method: 'eth_requestAccounts'});
-
-	const currentAccount = document.getElementById('mm-current-account');
-	currentAccount.innerHTML = "Your account is: " + ethereum.selectedAddress;
-	
+async function checkConnection() {
+	web3.eth.net.isListening()
+	.then(async (s) => {
+		let network = await web3.eth.net.getNetworkType();
+		document.getElementById("conn-status").innerHTML = 
+			"Connected to the blockchain node! " + "<b>network: " + network +"</b>";
+		console.log('We\'re connected to the node');
+	})
+	.catch((e) => {
+		document.getElementById("conn-status").innerHTML = "<b>NO connection to the blockchain node !</b>";
+		console.log('No connection to the node !');		
+	});
 }
+
+function parseWeb3Error(error) {
+	var errMessage = JSON.parse(error.message.substring(49, error.message.length - 1)); //.trim()
+	errMessage =  errMessage.value.data.message;
+	let removeGenericMessage = errMessage.split("VM Exception while processing transaction:");
+	errMessage = removeGenericMessage.length > 1 ? removeGenericMessage[1] : removeGenericMessage[0];
+	return errMessage;
+}
+
+// const mmEnable = document.getElementById('mm-connect');
+
+// mmEnable.onclick = async () => {
+// 	console.log("someone clicked the button");
+// 	await ethereum.request({method: 'eth_requestAccounts'});
+// 	const currentAccount = document.getElementById('mm-current-account');
+// 	currentAccount.innerHTML = "Your account is: " + ethereum.selectedAddress;	
+// }
+/*	END-OF-SECTION */
 
 
 /* Calling SmartContract Functions */
@@ -55,31 +77,47 @@ async function createGoodTimes() {
 	const name = document.getElementById("input-name").value;
 	const duration = document.getElementById("input-duration").value;
 	const eth = document.getElementById("input-eth").value;
-	let tx = await goodTimesContract.methods.createGoodTimes(name, duration)
-	.send({from: ethereum.selectedAddress, value: web3.utils.toWei(eth) });
 
-	var resultElement = document.getElementById("create-gtc-result")
-	resultElement.textContent += ("Wohoo, created Good times! Id: " + tx.events.GtcCreated.returnValues.gtcId);
+	var resultElement = document.getElementById("create-gtc-result");
+	// let tx = await 
+	goodTimesContract.methods.createGoodTimes(name, duration)
+	.send({from: ethereum.selectedAddress, value: web3.utils.toWei(eth) })
+	.then(tx => resultElement.textContent = "Wohoo, created Good times! Id: " + tx.events.GtcCreated.returnValues.gtcId)
+	.catch(err => {
+		console.log(err);
+		resultElement.textContent = "Tx failed: " + parseWeb3Error(err);		
+	} )
+
+	
+	
 }
 
 async function getGoodTimeObj(id) {
-	let gtc = await goodTimesContract.methods.goodTimesRegistry(1).call({ from: ethereum.selectedAddress});
+	let gtc = await goodTimesContract.methods.goodTimesRegistry(id).call({ from: ethereum.selectedAddress});
 	console.log(gtc.name);
 	return gtc;
 }
 
+async function callPledgeFunds() {
+	const gtcId = document.getElementById("pledge-id").value;
+	const amountEth = document.getElementById("pledge-eth").value;
+	const resultElem = document.getElementById("confirm-result");
+	resultElem.className = "tx-result";
+	await goodTimesContract.methods.pledgeFunds(gtcId).send(
+		{from: ethereum.selectedAddress, value: web3.utils.toWei(amountEth)})
+		.then(res => resultElem.textContent = "Pledged succesfull")
+		.catch(err => {
+			console.log(err);
+			resultElem.textContent = "Pledged failed! " + parseWeb3Error(err);
+		});
+}
+
 async function callCheckEnrolled() {
 	const gtcId = document.getElementById("gtc-id-input").value;
-	console.log(gtcId);
+	let result = await goodTimesContract.methods.checkIfUserIsEnrolled(gtcId).call({ from: ethereum.selectedAddress});
 
-	proba = await goodTimesContract.methods.checkIfUserIsEnrolled(gtcId).call({ from: ethereum.selectedAddress});
-
-	// await goodTimesContract.methods.checkIfUserIsEnrolled(gtcId).call({ from: ethereum.selectedAddress})
-	// 	.then(res => proba = res).catch(console.log);
-
-	//await probata().
 	var para = document.createElement("P");	
-	var t = document.createTextNode(`${proba}`);
+	var t = document.createTextNode(`${result}`);
 	para.style.fontWeight = "bold";
 	para.style.margin = "5px";
 	para.appendChild(t);
@@ -91,12 +129,37 @@ async function callCheckEnrolled() {
 		.call({from: ethereum.selectedAddress})
 		.then(
 			data => {
-				createTableFromArray(data);
+				fillTableData(data);
 			}
 		);
-
 }
-/*	*** */
+
+function callConfirmWithdrawal(gtcId) {
+	const tx = goodTimesContract.methods.confirmWithdrawal(gtcId).send({from: ethereum.selectedAddress});
+	var resultElement = document.getElementById("confirm-result")
+	resultElement.className = "tx-result";
+	tx.then(res => resultElement.textContent = "Confirmation succesfull for gtc with id: " + res.events.ConfirmationAdded.returnValues.gtcId )
+	.catch(err => {
+		console.log(err);
+		resultElement.textContent = "Confirmation failed " + parseWeb3Error(err);
+	});
+}
+
+async function callSendFunds(gtcId) {
+	const tx = goodTimesContract.methods.sendFundsToBookingContract(gtcId).send({from: ethereum.selectedAddress});
+	var resultElement = document.getElementById("confirm-result")
+	resultElement.className = "tx-result";
+	tx.then(res => resultElement.textContent = "Funds sent succesfully for gtc with id: " + res.events.WithdrawalSuccess.returnValues.gtcId )
+	.catch(err => {
+		console.log(err);
+		resultElement.textContent = "Tx failed: " + parseWeb3Error(err);
+	});
+}
+
+/*	END-OF-SECTION */
+
+/* Dom manipulation */
+
 function fillTableRowWithGtcResult(gtcObject) {
 	let table = document.getElementById("usersGtc");
 	let row = table.rows.namedItem("gtc" + gtcObject.id);
@@ -104,7 +167,7 @@ function fillTableRowWithGtcResult(gtcObject) {
 	row.cells[1].innerHTML = gtcObject.name;
 
 	// Create new headers
-	if (table.rows[0].cells.length <= 3)
+	if (table.tHead.childElementCount <= 3)
 	{
 		let newColumn = document.createElement("th");
 		newColumn.innerHTML = "Budget";
@@ -117,28 +180,39 @@ function fillTableRowWithGtcResult(gtcObject) {
 		newColumn = document.createElement("th");
 		newColumn.innerHTML = "Confirmations";
 		table.tHead.appendChild(newColumn);
+		newColumn = document.createElement("th");
+		newColumn.innerHTML = "Status";
+		table.tHead.appendChild(newColumn);
 	}
+	const cellsExist = row.cells.length >= 7;
+	let budgetCell = cellsExist ? row.cells[3] : document.createElement("td");
+	budgetCell.innerHTML = web3.utils.fromWei(gtcObject.budget, "ether") + " ETH";
 
-	let td = document.createElement("td")
-	td.innerHTML = web3.utils.fromWei(gtcObject.budget, "ether") + " ETH";
-	row.appendChild(td);
+	let durationCell = cellsExist ? row.cells[4] : document.createElement("td");
+	durationCell.innerHTML = gtcObject.durationInDays + " days";
 
-	td = document.createElement("td")
-	td.innerHTML = gtcObject.durationInDays; + "days";
-	row.appendChild(td);
+	let confirmations = cellsExist ? row.cells[5] : document.createElement("td")
+	confirmations.innerHTML = web3.utils.fromWei(gtcObject.confirmations, "ether") + " ETH";
 
-	td = document.createElement("td")
-	td.innerHTML = web3.utils.fromWei(gtcObject.confirmations, "ether") + " ETH";
-	row.appendChild(td);
+	let statusCell = cellsExist ? row.cells[6] : document.createElement("td")
+	statusCell.innerHTML = gtcObject.closed ? "Closed" : "Open";	
+
+	if (!cellsExist)
+	{
+		row.appendChild(budgetCell);
+		row.appendChild(durationCell);
+		row.appendChild(confirmations);
+		row.appendChild(statusCell);
+	}
 }
 
-async function createTableFromArray(arr) {
+async function createTableFromArray() {
 	let table = document.createElement("table"),
 		thead = document.createElement("thead"),
 		tbody = document.createElement('tbody'),
 		th = document.createElement("th");
 	
-	table.id = "usersGtc"; //table.onclick = highlight;
+	table.id = "usersGtc";
 	th.innerHTML = "Gtc Id"; 	
 	thead.appendChild(th);
 
@@ -153,54 +227,105 @@ async function createTableFromArray(arr) {
 	table.appendChild(thead);
 	table.appendChild(tbody);
 	// table.style.background = "#fff";
+	return table;
+}
+
+async function fillTableData(arr) {
+	let table = document.getElementById("usersGtc");
+
+	if (table === null)
+	{
+		table = await createTableFromArray();
+		document.body.append(table);
+		document.body.appendChild(await createSendFundsForm());
+	}
 	for (let i = 0; i < arr.length; i++) {
 		const gtcId = arr[i];
-		let tr = document.createElement("tr");
-		let td = document.createElement("td");
-		td.innerHTML = gtcId;
-		tr.appendChild(td);
-		tr.id = "gtc" + gtcId;
-		tr.appendChild(document.createElement("td")); // placeholder for Name column
+		let tr = table.rows.namedItem("gtc" + gtcId);
+		
+		if (tr === null)
+		{
+			tr = document.createElement("tr");
+			tr.id = "gtc" + gtcId;
+			let td = document.createElement("td");
+			td.innerHTML = gtcId;
+			tr.appendChild(td);		
+			tr.appendChild(document.createElement("td")); // placeholder for Name column
 
-		let btnElement = document.createElement("button");
-		btnElement.type = "button";
-		btnElement.innerHTML = "get Gtc Details";
-		btnElement.onclick = async function() { 
-			// var id = await getGoodTimeObj(gtcId);
-			fillTableRowWithGtcResult(await getGoodTimeObj(gtcId)) 
-		};
-		td = document.createElement("td");
-		td.appendChild(btnElement);
-		tr.appendChild(td);
+			td = document.createElement("td");
 
-		tbody.appendChild(tr);
+			let btnElement = document.createElement("button");
+			btnElement.type = "button";
+			btnElement.innerHTML = "Get Info";
+			btnElement.onclick = async function () {				
+				fillTableRowWithGtcResult(await getGoodTimeObj(gtcId));
+			};
+
+			let withdrawBtn = document.createElement("button");
+			withdrawBtn.type = "button";
+			withdrawBtn.innerHTML = "Confirm Withdrawal";
+			withdrawBtn.onclick = async function () {				
+				await callConfirmWithdrawal(gtcId);
+			};
+			
+			td.appendChild(btnElement);
+			td.appendChild(withdrawBtn);
+			tr.appendChild(td);
+
+			table.tBodies[0].appendChild(tr);
+		}		
 	}
-	document.body.append(table);
 }
 
-async function probata() {
-	throw 'myException';
+async function createSendFundsForm() {
+	let root = document.createElement("div"),
+		form = document.createElement("div"),
+		inputWrapper = document.createElement("div"),
+		inputLabel = document.createElement("label"),
+		input = document.createElement("input"),
+		btnWrapper = document.createElement("div"),
+		btn = document.createElement("input");
+	
+	root.className = "wrapper";
+	form.className = "form";
+
+	inputWrapper.className = "inputfield";
+	inputLabel.innerHTML = "GTC id";
+	input.type = "text";
+	input.className = "input";
+	input.id = "send-funds-id";
+	inputWrapper.appendChild(inputLabel);
+	inputWrapper.appendChild(input);
+
+	btnWrapper.className - "inputfield";
+	btn.type = "submit";
+	btn.id = "send-funds-btn";
+	btn.className = "btn";
+	btn.value = "Send funds to booking Contract";
+	btn.onclick = async function () {				
+				await callSendFunds(input.value);
+			};
+	btnWrapper.appendChild(btn);
+
+	form.appendChild(inputWrapper);
+	form.appendChild(btnWrapper);
+	let info = document.createElement("p");
+	info.innerHTML = "WARNING: Booking Contract oracle not implemented yet.<i> All your funds are belong to us</i>  (:";
+	form.appendChild(info);
+	root.appendChild(form);
+
+	
+	return root;
 }
 
+/* event handlers */
+document.getElementById("pledge-btn").onclick = callPledgeFunds;
 document.getElementById("get-mygtcs").onclick = callGetUsersGtc;
 
-const checkEnrolled = document.getElementById('check-enrolled');
-checkEnrolled.onclick = callCheckEnrolled;
+// const checkEnrolled = document.getElementById('check-enrolled');
+// checkEnrolled.onclick = callCheckEnrolled;
 
 const createGtcButton = document.getElementById("create-gtc");
 createGtcButton.onclick = createGoodTimes;
 
 
-async function checkConnection(){
-	web3.eth.net.isListening()
-	.then(async (s) => {
-		let network = await web3.eth.net.getNetworkType();
-		document.getElementById("conn-status").innerHTML = 
-			"Connected to the blockchain node! " + "<b>network: " + network +"</b>";
-		console.log('We\'re connected to the node');
-	})
-	.catch((e) => {
-		document.getElementById("conn-status").innerHTML = "<b>NO connection to the blockchain node !</b>";
-		console.log('No connection to the node !');		
-	});
-}
