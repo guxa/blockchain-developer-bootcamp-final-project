@@ -68,7 +68,6 @@ describe("PledgeFunds function", async () => {
 		let result = await gtcInstance.getUsersGTCs( {from: accounts[2]});
 		result = result.map( elem => elem.toNumber());
 		
-		console.log(result);
 		assert(result.includes(gtcId));
 	})
 });
@@ -76,9 +75,6 @@ describe("PledgeFunds function", async () => {
 
 
 // TODO :
-// Check if budget increased after pledged funds (mozit vo 1 describe site so pledgeFunds proverki)
-// 
-// withdrawal failed because of no confirmations
-// withdrawal failed because not participant
 // withdrawal failed because not Enough confirmations
+// withdrawal failed because not participant
 });

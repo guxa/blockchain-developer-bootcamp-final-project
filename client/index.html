@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="styles.css">
 	<link rel="stylesheet" href="table.css">
-	<title>My simple DAPP</title>	
+	<title>GoodTimes Dapp</title>	
 </head>
 <body>
 	<h1>Welcome to the Good Times Dapp </h1>
@@ -14,23 +14,21 @@
 	
 		<div class="wrapper column">
 			<div id="conn-status"> </div>
-			<div id="mm-detected" class="inform">Please connect your metamask to continue </div>
-	
-			<!-- <button id="mm-connect">Check MetaMask</button> -->
+			<div id="mm-detected" class="inform"><b>Please connect your metamask to continue</b> </div>
 	
 			<div id="mm-current-account"></div>
 	
-			<!-- <input type="number"class="inputfield" id="gtc-id-input" placeholder="GoodTimes id"> -->
-	
+			<!-- <input type="number"class="inputfield" id="gtc-id-input" placeholder="GoodTimes id"> -->	
 			<!-- <button id="check-enrolled" class="inform">Check if enrolled</button> -->
 			<!-- <div id="enrolled-result"></div> -->
+
 			<div class="form">
 			<input type="submit" id="get-mygtcs" class="btn" value="Get GoodTimes you participate in">
 			<br><br>
 			<div class="inputfield">
-				<label>GTC id</label>
+				<label>GoodTimes id</label>
 				<input type="number" id="pledge-id" class="input"
-					placeholder="Eth you want to pledge to this GTC experience">
+					placeholder="Id of the GoodTime you want to join">
 			</div>
 			<div class="inputfield">
 				<label>ETH</label>
@@ -74,7 +72,7 @@
 
 	<div class="row">
 		<div class="column">
-			<p id="confirm-result"></p>
+			<div id="confirm-result"></div>
 		</div>
 	
 		<div class="column"></div>

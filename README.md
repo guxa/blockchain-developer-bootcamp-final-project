@@ -18,16 +18,21 @@ It uses a multi-signature wallet concept, with some modifications like the confi
 
 5. Send funds to booking contract - this sends the GoodTime budget, to the booking contract. For this to be succesfull, the confirmation amount of the GoodTimes must be at least 50% of the budget . NOTE: the booking contract (LetsGo.sol) is not yet implemented, to finish it we will need some sort of Oracle that can communicate with sites like (Booking.com, Expedia, Ticketmaster) and make reservations/buy tickets for events.
 
+## Web app URL
+https://guxa.github.io/
+
+
 ## Folder structure
-- `client`: Front end application files (Vanilla JS, HTML, CSS)
-- `contracts`: Solidity smart contracts
-- `migrations`: migration scripts for deploying the smart contracts
-- `test`: JS tests for the solidity smart contract GoodTimesContract.sol
+- `./client`: Front end application files (Vanilla JS, HTML, CSS)
+- `./contracts`: Solidity smart contracts
+- `./migrations`: migration scripts for deploying the smart contracts
+- `./test`: JS tests for the solidity smart contract GoodTimesContract.sol
 
 ## Prerequisites
 ### If using the hosted app:
 1. MetaMask extension for browser
-2. Some ETH for transactions ^^
+2. Make sure you are using Ropsten testnet
+3. Have some testnet ETH for transactions ^^
 
 ### For running locally
 1. NodeJS v8.9.4 or later and npm v5.0.3 or later
@@ -36,7 +41,7 @@ It uses a multi-signature wallet concept, with some modifications like the confi
 4. Open a terminal, navigate to the folder where you cloned the repo
 5. run `npm install`
 6. Open another terminal, start a local blockchain instance using Ganache `ganache-cli -p 8545` leave this terminal open
-7. Compile and deploy the smartcontracts: In the first terminal, go to the root of the repo and run `truffle migrate --network development`
+7. Compile and deploy the smartcontracts: In the first terminal, go to the root of the repo and run `truffle compile` then `truffle migrate --network development`
 8. Open `client/index.html` in your Browser (make sure you have MetaMask installed)
 9. Have a good time (:)
 

@@ -1,7 +1,7 @@
-const goodTimesAddress = "0x932824dBD7E5A3D94CC92b0f69E008338c18d198";
 const GTC_ABI_PATH = "../build/contracts/GoodTimesContract.json";
 let goodTimesContract;
 var web3;
+let network;
 
 window.addEventListener('load', onPageLoad);
 
@@ -22,19 +22,21 @@ async function onPageLoad()
 	else
 	{
 		console.log("Metamask Not Available!");
-		alert("You need to install MetaMask or another wallet !");
+		alert("You need to install MetaMask to use this Dapp !");
 	}
 }
 
 
 async function configureBlockchainStuff(){
-	let currentContractAddress = goodTimesAddress;
 	var json = await $.getJSON(GTC_ABI_PATH);
-	let abi = json.abi; 
+	let abi = json.abi;	
 	web3 = new Web3(window.ethereum);
-	goodTimesContract = new web3.eth.Contract(abi, currentContractAddress);
+
+	const contractAddress = json.networks[await web3.eth.net.getId()].address;
+	goodTimesContract = new web3.eth.Contract(abi, contractAddress);
 	await goodTimesContract.setProvider(window.ethereum);
 	window.addEventListener('click', checkConnection);
+	// web3.eth.handleRevert = true;
 }
 
 /* Web3 Utility Functions */
@@ -42,7 +44,7 @@ async function configureBlockchainStuff(){
 async function checkConnection() {
 	web3.eth.net.isListening()
 	.then(async (s) => {
-		let network = await web3.eth.net.getNetworkType();
+		network = await web3.eth.net.getNetworkType();
 		document.getElementById("conn-status").innerHTML = 
 			"Connected to the blockchain node! " + "<b>network: " + network +"</b>";
 		console.log('We\'re connected to the node');
@@ -53,12 +55,19 @@ async function checkConnection() {
 	});
 }
 
+
 function parseWeb3Error(error) {
-	var errMessage = JSON.parse(error.message.substring(49, error.message.length - 1)); //.trim()
-	errMessage =  errMessage.value.data.message;
-	let removeGenericMessage = errMessage.split("VM Exception while processing transaction:");
-	errMessage = removeGenericMessage.length > 1 ? removeGenericMessage[1] : removeGenericMessage[0];
-	return errMessage;
+	if (network === "private") {
+		var errMessage = JSON.parse(error.message.substring(49, error.message.length - 1)); //.trim()
+		errMessage =  errMessage.value.data.message;
+		let removeGenericMessage = errMessage.split("VM Exception while processing transaction:");
+		errMessage = removeGenericMessage.length > 1 ? removeGenericMessage[1] : removeGenericMessage[0];
+		return errMessage;
+	}
+	else if (network === "ropsten") {
+		return `see details at: <a href="https://ropsten.etherscan.io/tx/${error.receipt.transactionHash}"`
+		+ ' target="_blank"> ropsten.etherscan.io </a>'
+	}
 }
 
 // const mmEnable = document.getElementById('mm-connect');
@@ -79,13 +88,13 @@ async function createGoodTimes() {
 	const eth = document.getElementById("input-eth").value;
 
 	var resultElement = document.getElementById("create-gtc-result");
-	// let tx = await 
+	resultElement.innerHTML = 'Waiting for Tx <div class="loader"></div>';
 	goodTimesContract.methods.createGoodTimes(name, duration)
 	.send({from: ethereum.selectedAddress, value: web3.utils.toWei(eth) })
-	.then(tx => resultElement.textContent = "Wohoo, created Good times! Id: " + tx.events.GtcCreated.returnValues.gtcId)
+	.then(tx => resultElement.innerHTML = "Wohoo, created Good times! Id: " + tx.events.GtcCreated.returnValues.gtcId)
 	.catch(err => {
 		console.log(err);
-		resultElement.textContent = "Tx failed: " + parseWeb3Error(err);		
+		resultElement.innerHTML = "Tx failed: " + parseWeb3Error(err);		
 	} )
 
 	
@@ -103,12 +112,13 @@ async function callPledgeFunds() {
 	const amountEth = document.getElementById("pledge-eth").value;
 	const resultElem = document.getElementById("confirm-result");
 	resultElem.className = "tx-result";
+	resultElem.innerHTML = 'Waiting for Tx <div class="loader"></div>';
 	await goodTimesContract.methods.pledgeFunds(gtcId).send(
 		{from: ethereum.selectedAddress, value: web3.utils.toWei(amountEth)})
-		.then(res => resultElem.textContent = "Pledged succesfull")
+		.then(res => resultElem.innerHTML = "Pledged succesfull")
 		.catch(err => {
 			console.log(err);
-			resultElem.textContent = "Pledged failed! " + parseWeb3Error(err);
+			resultElem.innerHTML = "Pledged failed! " + parseWeb3Error(err);
 		});
 }
 
@@ -138,10 +148,11 @@ function callConfirmWithdrawal(gtcId) {
 	const tx = goodTimesContract.methods.confirmWithdrawal(gtcId).send({from: ethereum.selectedAddress});
 	var resultElement = document.getElementById("confirm-result")
 	resultElement.className = "tx-result";
-	tx.then(res => resultElement.textContent = "Confirmation succesfull for gtc with id: " + res.events.ConfirmationAdded.returnValues.gtcId )
+	resultElement.innerHTML = 'Waiting for Tx <div class="loader"></div>';
+	tx.then(res => resultElement.innerHTML = "Confirmation succesfull for gtc with id: " + res.events.ConfirmationAdded.returnValues.gtcId )
 	.catch(err => {
 		console.log(err);
-		resultElement.textContent = "Confirmation failed " + parseWeb3Error(err);
+		resultElement.innerHTML = "Confirmation failed " + parseWeb3Error(err);
 	});
 }
 
@@ -149,10 +160,11 @@ async function callSendFunds(gtcId) {
 	const tx = goodTimesContract.methods.sendFundsToBookingContract(gtcId).send({from: ethereum.selectedAddress});
 	var resultElement = document.getElementById("confirm-result")
 	resultElement.className = "tx-result";
-	tx.then(res => resultElement.textContent = "Funds sent succesfully for gtc with id: " + res.events.WithdrawalSuccess.returnValues.gtcId )
+	resultElement.innerHTML = 'Waiting for Tx <div class="loader"></div>';
+	tx.then(res => resultElement.innerHTML = "Funds sent succesfully for gtc with id: " + res.events.WithdrawalSuccess.returnValues.gtcId )
 	.catch(err => {
 		console.log(err);
-		resultElement.textContent = "Tx failed: " + parseWeb3Error(err);
+		resultElement.innerHTML = "Tx failed: " + parseWeb3Error(err);
 	});
 }
 
