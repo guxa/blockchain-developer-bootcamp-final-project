@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0; //>=0.5.16 <0.9.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-import "./GoodTimesContract.sol";
 
 interface LetsGoInterface {
 	enum ActivityType { 
@@ -19,6 +17,8 @@ interface LetsGoInterface {
 	function Validate() external pure returns (uint8);
 
 	function getBalance(uint) external view returns (uint);
+
+	function generateGoodTimeProposal() external ;
 }
 
 contract LetsGo is LetsGoInterface, Ownable {
@@ -35,6 +35,10 @@ contract LetsGo is LetsGoInterface, Ownable {
 	function Validate() external pure returns (uint8) {
         return 42;
     }
+
+	function generateGoodTimeProposal() public {
+		revert("Not implemented yet, please be patient and wait for the new version :)");
+	}
 }
 
 

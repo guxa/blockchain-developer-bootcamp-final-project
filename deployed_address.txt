@@ -1,0 +1,3 @@
+Ropsten: 
+GoodTimesContract: 0xc9bDF4Da4aA5FE7df84Abdbd578d7291af198f85
+LetsGoContract: 0xfd3753BDB64AA1D428DE5FA1AcB7CEe147848aa9
