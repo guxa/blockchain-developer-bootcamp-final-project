@@ -47,7 +47,8 @@ https://guxa.github.io/
 
 ## Test
 - Make sure you have truffle installed (see steps 1 and 2 above)
-- Navigate to the folder where you cloned the repository
+- Open a terminal, start a local blockchain instance using Ganache ganache-cli -p 8545 leave this terminal open
+- Open another terminal and go to the folder where you cloned the repository
 - run `truffle test`
 
 
