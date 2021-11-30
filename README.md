@@ -21,6 +21,8 @@ It uses a multi-signature wallet concept, with some modifications like the confi
 ## Web app URL
 https://guxa.github.io/
 
+## Screencast - intro to the project
+https://www.loom.com/share/2ef79f65596043cfa40fa7b81bc6bab2
 
 ## Folder structure
 - `./client`: Front end application files (Vanilla JS, HTML, CSS)
